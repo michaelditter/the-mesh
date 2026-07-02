@@ -30,9 +30,11 @@
 // ============================================================
 import { MeshDevice } from '@meshtastic/core';
 import { TransportHTTP } from '@meshtastic/transport-http';
-import { finalizeEvent, generateSecretKey, getPublicKey } from 'nostr-tools/pure';
+import { generateSecretKey, getPublicKey } from 'nostr-tools/pure';
 import { SimplePool } from 'nostr-tools/pool';
 import * as nip19 from 'nostr-tools/nip19';
+import * as NostrTools from 'nostr-tools';
+import { buildRecord, signRecord, publishRecord, recordLinks } from '@youcannoteat/record-core';
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
@@ -107,29 +109,25 @@ function clampBytes(s, maxBytes) {
 }
 
 async function recordToNostr(text, from, fromName) {
-  const tags = [
-    ['t', 'therecord'], ['t', 'youcannoteat'], ['t', 'mesh'],
-    // Authorship is carried here, not in the signature: the bridge key attests
-    // only that this bridge heard the message. mesh_from is the mesh node number.
-    ['mesh_from', String(from)],
-    ['client', 'the-mesh']
-  ];
-  if (fromName) tags.push(['mesh_from_name', String(fromName)]);
-  // Prefix content for human readers on njump (most clients don't render custom tags).
-  const content = `[node ${from}] ${text}`;
-  const ev = finalizeEvent({
-    kind: 1,
-    created_at: Math.floor(Date.now() / 1000),
-    tags,
-    content
-  }, SK);
-  const results = await Promise.allSettled(pool.publish(RELAYS, ev));
-  const ok = results.filter((r) => r.status === 'fulfilled').length;
+  // Built through record-core (the shared CRP core). Authorship is carried in the
+  // mesh_from tag, not the signature: the bridge key attests only that this bridge
+  // heard the message. The legacy 'therecord' hashtag is kept for continuity.
+  const template = buildRecord({
+    content: `[node ${from}] ${text}`, // prefix for humans on njump (most clients ignore custom tags)
+    client: 'the-mesh',
+    type: 'mesh',
+    meshFrom: from,
+    meshFromName: fromName,
+    extraTags: [['t', 'therecord']]
+  });
+  const ev = signRecord(template, SK, NostrTools);
+  const report = await publishRecord(ev, RELAYS, NostrTools);
   const safe = sanitizeForConsole(text);
-  if (ok === 0) {
+  if (report.accepted === 0) {
     console.error(`  (no relay accepted it) from ${from}: "${safe}"`);
   } else {
-    console.log(`mesh→nostr  from ${from}: "${safe}"  →  accepted by ${ok}/${RELAYS.length} relays  →  https://njump.me/${nip19.noteEncode(ev.id)}`);
+    const { njump } = recordLinks(ev, NostrTools, RELAYS);
+    console.log(`mesh→nostr  from ${from}: "${safe}"  →  accepted by ${report.accepted}/${report.total} relays  →  ${njump}`);
   }
 }
 

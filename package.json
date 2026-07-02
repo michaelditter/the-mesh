@@ -9,6 +9,7 @@
   "dependencies": {
     "@meshtastic/core": "2.6.7",
     "@meshtastic/transport-http": "0.2.5",
+    "@youcannoteat/record-core": "github:michaelditter/record-core",
     "nostr-tools": "2.23.9"
   },
   "optionalDependencies": {

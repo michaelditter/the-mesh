@@ -1,18 +1,18 @@
 {
   "name": "the-mesh",
-  "version": "1.0.0",
-  "description": "Bridge a Meshtastic (LoRa) node to Nostr — off-grid mesh messages become permanent public records. The sermon/post layer from You Cannot Eat Code, made real.",
+  "version": "0.1.0",
+  "description": "Bridge a Meshtastic (LoRa) node to Nostr — opt-in off-grid mesh messages become durable, signed public records replicated across relays, recallable by no single platform. The sermon/post layer from You Cannot Eat Code, made real.",
   "type": "module",
   "bin": { "the-mesh": "bridge.mjs" },
   "scripts": { "start": "node bridge.mjs" },
   "engines": { "node": ">=22" },
   "dependencies": {
-    "@meshtastic/core": "^2.6.7",
-    "@meshtastic/transport-http": "^0.2.5",
-    "nostr-tools": "^2.7.0"
+    "@meshtastic/core": "2.6.7",
+    "@meshtastic/transport-http": "0.2.5",
+    "nostr-tools": "2.23.9"
   },
   "optionalDependencies": {
-    "@meshtastic/transport-node-serial": "^0.0.2"
+    "@meshtastic/transport-node-serial": "0.0.2"
   },
   "keywords": ["meshtastic", "lora", "nostr", "off-grid", "bridge", "youcannoteat"],
   "author": "Michael Ditter",

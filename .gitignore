@@ -2,3 +2,6 @@ node_modules/
 *.log
 .DS_Store
 .the-mesh/
+
+# Claude Code harness config (local preview helper)
+.claude/
